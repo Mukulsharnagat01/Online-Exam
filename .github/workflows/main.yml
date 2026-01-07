@@ -33,6 +33,9 @@ jobs:
         working-directory: ./backend
         run: npm install
 
+     - name: Install PM2 globally
+         run: npm install -g pm2
+
       - name: Create backend .env file
         working-directory: ./backend
         run: |
