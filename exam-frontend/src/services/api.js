@@ -69,7 +69,7 @@ export const authAPI = {
       console.log('📤 Sending to:', 'http://localhost:3000/auth/register');
       console.log('📦 Data:', userData);
       
-      const response = await api.post('/register', userData);
+      const response = await api.post('/auth/register', userData);
       console.log('✅ Response:', response.data);
       return response.data;
     } catch (error) {
@@ -93,7 +93,7 @@ export const authAPI = {
 
   verifyEmail: async (code) => {
     try {
-      const response = await api.post('/verifyEmail', { code });
+      const response = await api.post('/auth/verifyEmail', { code });
       return response.data;
     } catch (error) {
       console.error('Verify Email Error:', error);
@@ -113,7 +113,7 @@ login: async (credentials) => {
   try {
     console.log('🔐 Login attempt:', credentials.email);
     
-    const response = await api.post('/login', credentials);
+    const response = await api.post('/auth/login', credentials);
     console.log('✅ Login response:', response.data);
     
     // ✅ SUCCESS CASE - Token और user data save करें
@@ -176,7 +176,7 @@ checkLogin: async () => {
     }
 
     // ✅ token को Authorization header में भेजें
-    const response = await api.get('/check-login', {
+    const response = await api.get('/auth/check-login', {
       headers: {
         Authorization: `Bearer ${token}`
       },
@@ -202,7 +202,7 @@ checkLogin: async () => {
   // Logout function
   logout: async () => {
     try {
-      const response = await api.post('/logout');
+      const response = await api.post('/auth/logout');
       return response.data;
     } catch (error) {
       console.error('Logout error:', error);
@@ -212,7 +212,7 @@ checkLogin: async () => {
   
   forgotPassword : async (email) => {
     try {
-      const response = await api.post('/forgot-password', { email });
+      const response = await api.post('/auth/forgot-password', { email });
       return response.data;
     } catch (error) {
       if (error.response?.data) {
@@ -226,7 +226,7 @@ checkLogin: async () => {
   },
    verifyResetOTP: async (email, otp) => {
     try {
-      const response = await api.post('/verify-reset-otp', { 
+      const response = await api.post('/auth/verify-reset-otp', { 
         email, 
         otp 
       });
@@ -244,7 +244,7 @@ checkLogin: async () => {
   
   resetPassword : async (token, newPassword) => {
     try {
-      const response = await api.post('/reset-password', { 
+      const response = await api.post('/auth/reset-password', { 
         token, 
         newPassword 
       });
