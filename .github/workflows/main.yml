@@ -59,7 +59,7 @@ jobs:
         working-directory: ./exam-frontend
         run: |
           touch .env
-          echo "${{ secrets.PROD_FRONTEND_ENV }}" > .env
+          echo "${{ secrets.PRODFRONTEND_ENV }}" > .env
       - name: Build frontend
         working-directory: ./exam-frontend
         run: npm run build
