@@ -44,7 +44,7 @@ app.use('/submissions', submissionRoutes);
 app.use('/exams', examRoutes);      // ✅ ADD THIS LINE
 app.use('/results', resultRoutes);  // ✅ ADD THIS LINE
 app.use('/student', studentRoutes); // ✅ ADD THIS LINE
-app.use('/', submissionRoutes);
+// app.use('/', submissionRoutes);
 // ==================== EXAM SYSTEM ROUTES ====================
 
 // In-memory storage (temporary - MongoDB / DynamoDB later)
@@ -217,7 +217,7 @@ app.delete('/api/questions/:subject/:id', authMiddleware, (req, res) => {
 });
 
 
-app.get('/api/admin/submissions', authMiddleware, (req, res) => {
+app.get('/admin/submissions', authMiddleware, (req, res) => {
   try {
     // Check if user is admin
     if (req.user.role !== 'admin') {
