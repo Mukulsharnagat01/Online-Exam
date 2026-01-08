@@ -40,7 +40,7 @@ DbCon();
 // ==================== AUTH ROUTES ====================
 app.use('/auth', AuthRoutes); // /auth/register, /auth/login etc.
 app.use("/questions", questionRoutes);
-app.use('/api', submissionRoutes);
+app.use('/submissions', submissionRoutes);
 app.use('/exams', examRoutes);      // ✅ ADD THIS LINE
 app.use('/results', resultRoutes);  // ✅ ADD THIS LINE
 app.use('/student', studentRoutes); // ✅ ADD THIS LINE
@@ -313,17 +313,17 @@ app.post('/api/dev/seed-exams', (req, res) => {
   }
 });
 
-// // Get student submissions summary
-// app.get('/api/student-submissions', (req, res) => {
-//   const summary = submissions.map(sub => ({
-//     id: sub.id,
-//     subject: sub.subject.replace(/-/g, ' '),
-//     studentName: sub.studentName,
-//     timestamp: sub.timestamp,
-//     totalQuestions: sub.answers.length
-//   }));
-//   res.json(summary);
-// });
+// Get student submissions summary
+app.get('/api/student-submissions', (req, res) => {
+  const summary = submissions.map(sub => ({
+    id: sub.id,
+    subject: sub.subject.replace(/-/g, ' '),
+    studentName: sub.studentName,
+    timestamp: sub.timestamp,
+    totalQuestions: sub.answers.length
+  }));
+  res.json(summary);
+});
 
 
 
