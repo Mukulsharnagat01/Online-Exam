@@ -1,5 +1,5 @@
 
-name: Deploy Fullstack App
+name: 2Deploy Fullstack App
 
 on:
   push:
