@@ -39,12 +39,12 @@ DbCon();
 
 // ==================== AUTH ROUTES ====================
 app.use('/auth', AuthRoutes); // /auth/register, /auth/login etc.
-// app.use("/questions", questionRoutes);
-app.use('/submissions', submissionRoutes);
+app.use("/questions", questionRoutes);
+// app.use('/submissions', submissionRoutes);
 app.use('/exams', examRoutes);      // ✅ ADD THIS LINE
 app.use('/results', resultRoutes);  // ✅ ADD THIS LINE
 app.use('/student', studentRoutes); // ✅ ADD THIS LINE
-app.use('/api', submissionRoutes);
+app.use('/', submissionRoutes);
 // ==================== EXAM SYSTEM ROUTES ====================
 
 // In-memory storage (temporary - MongoDB / DynamoDB later)
@@ -217,28 +217,28 @@ app.delete('/api/questions/:subject/:id', authMiddleware, (req, res) => {
 });
 
 
-// app.get('/admin/submissions', authMiddleware, (req, res) => {
-//   try {
-//     // Check if user is admin
-//     if (req.user.role !== 'admin') {
-//       return res.status(403).json({ 
-//         success: false, 
-//         message: 'Only admin can view submissions' 
-//       });
-//     }
-//     res.json({
-//       success: true,
-//       submissions: inMemoryStore.getSubmissions()
-//     });
+app.get('/admin/submissions', authMiddleware, (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Only admin can view submissions' 
+      });
+    }
+    res.json({
+      success: true,
+      submissions: inMemoryStore.getSubmissions()
+    });
     
-//   } catch (error) {
-//     console.error('Get submissions error:', error);
-//     res.status(500).json({ 
-//       success: false, 
-//       message: 'Server error' 
-//     });
-//   }
-// });
+  } catch (error) {
+    console.error('Get submissions error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
+  }
+});
 
 // Get student submissions summary - PROTECTED
 app.get('/api/student-submissions', authMiddleware, (req, res) => {
