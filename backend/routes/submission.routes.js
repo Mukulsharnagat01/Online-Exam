@@ -30,7 +30,7 @@ import authMiddleware, { isAdmin } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 router.post('/submit-exam', authMiddleware, submitExam);
-router.get('/admin/submissions', authMiddleware, isAdmin, getAllSubmissions);
+router.get('/', authMiddleware, isAdmin, getAllSubmissions);
 router.get('/my-submissions', authMiddleware, getMySubmissions);
 router.get('/my-results', authMiddleware, getMyResults); // ✅ Get student's results by userId
 router.post('/admin/evaluate/:submissionId', authMiddleware, isAdmin, evaluateSubmission);
