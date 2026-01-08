@@ -38,13 +38,13 @@ app.use(cookieParser());
 DbCon();
 
 // ==================== AUTH ROUTES ====================
-app.use('/api/auth', AuthRoutes); // /auth/register, /auth/login etc.
-app.use("/api/questions", questionRoutes);
-app.use('/api/submissions', submissionRoutes);
-app.use('/api/exams', examRoutes);      // ✅ ADD THIS LINE
-app.use('/api/results', resultRoutes);  // ✅ ADD THIS LINE
-app.use('/api/student', studentRoutes); // ✅ ADD THIS LINE
-app.use('/api', submissionRoutes);
+app.use('/auth', AuthRoutes); // /auth/register, /auth/login etc.
+app.use("/questions", questionRoutes);
+app.use('/submissions', submissionRoutes);
+app.use('/exams', examRoutes);      // ✅ ADD THIS LINE
+app.use('/results', resultRoutes);  // ✅ ADD THIS LINE
+app.use('/student', studentRoutes); // ✅ ADD THIS LINE
+// app.use('', submissionRoutes);
 // ==================== EXAM SYSTEM ROUTES ====================
 
 // In-memory storage (temporary - MongoDB / DynamoDB later)
