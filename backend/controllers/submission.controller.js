@@ -33,7 +33,11 @@ export const submitExam = async (req, res) => {
 export const getAllSubmissions = async (req, res) => {
   try {
     const result = await ddb.send(new ScanCommand({ TableName: SUB_TABLE }));
-    res.json(result.Items || []);
+    res.json({
+  success: true,
+  submissions: result.Items || []
+});
+
   } catch (err) {
     res.status(500).json({ message: 'Failed' });
   }
@@ -47,7 +51,11 @@ export const getMySubmissions = async (req, res) => {
       KeyConditionExpression: 'userId = :uid',
       ExpressionAttributeValues: { ':uid': req.user.userId }
     }));
-    res.json(result.Items || []);
+    res.json({
+  success: true,
+  submissions: result.Items || []
+});
+
   } catch (err) {
     res.status(500).json({ message: 'Failed' });
   }
