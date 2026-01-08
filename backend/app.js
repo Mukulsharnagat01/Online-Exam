@@ -44,7 +44,7 @@ app.use('/submissions', submissionRoutes);
 app.use('/exams', examRoutes);      // ✅ ADD THIS LINE
 app.use('/results', resultRoutes);  // ✅ ADD THIS LINE
 app.use('/student', studentRoutes); // ✅ ADD THIS LINE
-// app.use('', submissionRoutes);
+app.use('/', submissionRoutes);
 // ==================== EXAM SYSTEM ROUTES ====================
 
 // In-memory storage (temporary - MongoDB / DynamoDB later)
@@ -265,23 +265,23 @@ app.get('/api/student-submissions', authMiddleware, (req, res) => {
   }
 });
 
-// Submit exam answers
-// app.post('/api/submissions', (req, res) => {
-//   const submission = {
-//     id: Date.now(),
-//     timestamp: new Date().toISOString(),
-//     subject: req.body.subject,
-//     studentName: req.body.studentName || 'Anonymous',
-//     answers: req.body.answers
-//   };
-//   inMemoryStore.addSubmission(submission);
-//   res.status(201).json({ message: 'Exam submitted successfully' });
-// });
+Submit exam answers
+app.post('/api/submissions', (req, res) => {
+  const submission = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    subject: req.body.subject,
+    studentName: req.body.studentName || 'Anonymous',
+    answers: req.body.answers
+  };
+  inMemoryStore.addSubmission(submission);
+  res.status(201).json({ message: 'Exam submitted successfully' });
+});
 
-// // Get all submissions (admin)
-// app.get('/api/submissions', (req, res) => {
-//   res.json(inMemoryStore.getSubmissions());
-// });
+// Get all submissions (admin)
+app.get('/api/submissions', (req, res) => {
+  res.json(inMemoryStore.getSubmissions());
+});
 
 // Dev: seed exams based on existing submission examIds (creates in-memory exams)
 app.post('/api/dev/seed-exams', (req, res) => {
