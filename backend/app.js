@@ -217,28 +217,28 @@ app.delete('/api/questions/:subject/:id', authMiddleware, (req, res) => {
 });
 
 
-app.get('/admin/submissions', authMiddleware, (req, res) => {
-  try {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Only admin can view submissions' 
-      });
-    }
-    res.json({
-      success: true,
-      submissions: inMemoryStore.getSubmissions()
-    });
+// app.get('/admin/submissions', authMiddleware, (req, res) => {
+//   try {
+//     // Check if user is admin
+//     if (req.user.role !== 'admin') {
+//       return res.status(403).json({ 
+//         success: false, 
+//         message: 'Only admin can view submissions' 
+//       });
+//     }
+//     res.json({
+//       success: true,
+//       submissions: inMemoryStore.getSubmissions()
+//     });
     
-  } catch (error) {
-    console.error('Get submissions error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error' 
-    });
-  }
-});
+//   } catch (error) {
+//     console.error('Get submissions error:', error);
+//     res.status(500).json({ 
+//       success: false, 
+//       message: 'Server error' 
+//     });
+//   }
+// });
 
 // Get student submissions summary - PROTECTED
 app.get('/api/student-submissions', authMiddleware, (req, res) => {
