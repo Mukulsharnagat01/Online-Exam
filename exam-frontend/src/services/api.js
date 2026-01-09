@@ -285,7 +285,7 @@ export const adminAPI = {
   // Get all submissions (admin only)
   getSubmissions: async () => {
     try {
-      const response = await api.get('/api/admin/submissions');
+      const response = await api.get('/api/submissions/admin/submissions');
       return response.data;
     } catch (error) {
       console.error('Get submissions error:', error);
