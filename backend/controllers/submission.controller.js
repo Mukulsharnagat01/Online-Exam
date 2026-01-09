@@ -8,34 +8,6 @@ const RES_TABLE = process.env.DYNAMODB_RESULTS_TABLE || 'Results';
 
 
 
-// added extra
-// Add this helper function at the top (after imports)
-const getExamDetails = async (examId) => {
-  try {
-    const EXAM_TABLE = process.env.DYNAMODB_EXAMS_TABLE || 'Exams';
-    const examRes = await ddb.send(new GetCommand({ 
-      TableName: EXAM_TABLE, 
-      Key: { examId } 
-    }));
-    
-    if (examRes.Item) {
-      return {
-        examName: examRes.Item.title || examRes.Item.examName || `Exam ${examId}`,
-        subject: examRes.Item.subject || 'General',
-        examType: examRes.Item.examType || 'MCQ'
-      };
-    }
-  } catch (err) {
-    console.warn(`Failed to fetch exam ${examId}:`, err.message);
-  }
-  
-  return {
-    examName: `Exam ${examId}`,
-    subject: 'General',
-    examType: 'MCQ'
-  };
-};
-// added exit
 
 export const submitExam = async (req, res) => {
   try {
@@ -61,54 +33,54 @@ export const submitExam = async (req, res) => {
   }
 };
 
-// export const getAllSubmissions = async (req, res) => {
-//   try {
-//     const result = await ddb.send(new ScanCommand({ TableName: SUB_TABLE }));
-//     res.json({
-//   success: true,
-//   submissions: result.Items || []
-// });
-
-//   } catch (err) {
-//     res.status(500).json({ message: 'Failed' });
-//   }
-// };
-// Function 1: getAllSubmissions
 export const getAllSubmissions = async (req, res) => {
   try {
-    console.log('🔍 Fetching from DynamoDB Table:', SUB_TABLE);
-    
-    // ✅ सिर्फ़ DynamoDB से data लाएँ
-    const result = await ddb.send(new ScanCommand({ 
-      TableName: SUB_TABLE,
-      Limit: 100  // Optional: limit add करें
-    }));
-    
-    const submissions = result.Items || [];
-    
-    console.log('✅ DynamoDB में मिले submissions:', submissions.length);
-    
-    // ✅ सिर्फ़ DynamoDB data return करें
+    const result = await ddb.send(new ScanCommand({ TableName: SUB_TABLE }));
     res.json({
-      success: true,
-      submissions: submissions,  // ✅ यह line important है
-      count: submissions.length
-    });
+  success: true,
+  submissions: result.Items || []
+});
 
   } catch (err) {
-    console.error('❌ DynamoDB Error:', err);
-    
-    // Fallback में भी inMemoryStore का नाम check करें
-    const memorySubs = inMemoryStore.getSubmissions ? inMemoryStore.getSubmissions() : [];
-    
-    res.json({
-      success: true,
-      submissions: memorySubs,
-      count: memorySubs.length,
-      source: 'in-memory-fallback'
-    });
+    res.status(500).json({ message: 'Failed' });
   }
 };
+// // Function 1: getAllSubmissions
+// export const getAllSubmissions = async (req, res) => {
+//   try {
+//     console.log('🔍 Fetching from DynamoDB Table:', SUB_TABLE);
+    
+//     // ✅ सिर्फ़ DynamoDB से data लाएँ
+//     const result = await ddb.send(new ScanCommand({ 
+//       TableName: SUB_TABLE,
+//       Limit: 100  // Optional: limit add करें
+//     }));
+    
+//     const submissions = result.Items || [];
+    
+//     console.log('✅ DynamoDB में मिले submissions:', submissions.length);
+    
+//     // ✅ सिर्फ़ DynamoDB data return करें
+//     res.json({
+//       success: true,
+//       submissions: submissions,  // ✅ यह line important है
+//       count: submissions.length
+//     });
+
+//   } catch (err) {
+//     console.error('❌ DynamoDB Error:', err);
+    
+//     // Fallback में भी inMemoryStore का नाम check करें
+//     const memorySubs = inMemoryStore.getSubmissions ? inMemoryStore.getSubmissions() : [];
+    
+//     res.json({
+//       success: true,
+//       submissions: memorySubs,
+//       count: memorySubs.length,
+//       source: 'in-memory-fallback'
+//     });
+//   }
+// };
 
 export const getMySubmissions = async (req, res) => {
   try {
@@ -228,76 +200,36 @@ export const evaluateSubmission = async (req, res) => {
 
 
 
-// export const getMyResults = async (req, res) => {
-//   try {
-//     const EXAM_TABLE = process.env.DYNAMODB_EXAMS_TABLE || 'Exams';
-    
-//     // 1) Fetch published results for the user
-//     let published = [];
-//     try {
-//       const result = await ddb.send(new QueryCommand({
-//         TableName: RES_TABLE,
-//         IndexName: 'userId-index',
-//         KeyConditionExpression: 'userId = :uid',
-//         ExpressionAttributeValues: { ':uid': req.user.userId }
-//       }));
-//       published = result.Items || [];
-      
-//       // Get exam details for each result
-//       published = await Promise.all(published.map(async (result) => {
-//         try {
-//           const examRes = await ddb.send(new GetCommand({ 
-//             TableName: EXAM_TABLE, 
-//             Key: { examId: result.examId } 
-//           }));
-          
-//           return {
-//             ...result,
-//             examName: examRes?.Item?.title || examRes?.Item?.examName || `Exam ${result.examId}`,
-//             subject: examRes?.Item?.subject || 'General',
-//             examType: examRes?.Item?.examType || 'MCQ'
-//           };
-//         } catch (examErr) {
-//           console.warn(`Failed to fetch exam ${result.examId}:`, examErr.message);
-//           return {
-//             ...result,
-//             examName: `Exam ${result.examId}`,
-//             subject: 'General',
-//             examType: 'Unknown'
-//           };
-//         }
-//       }));
 
-
-// // Get results by userId (student's results)
-// export const getMyResults = async (req, res) => {
-//   try {
-//     // 1) Fetch published results for the user
-//     let published = [];
-//     try {
-//       const result = await ddb.send(new QueryCommand({
-//         TableName: RES_TABLE,
-//         IndexName: 'userId-index', // GSI for querying by userId
-//         KeyConditionExpression: 'userId = :uid',
-//         ExpressionAttributeValues: { ':uid': req.user.userId }
-//       }));
-//       published = result.Items || [];
-//     } catch (err) {
-//       console.warn('Querying Results table failed, falling back to scan or in-memory', err?.message || err);
-      // try scan fallback
-    //   try {
-    //     const scanRes = await ddb.send(new ScanCommand({
-    //       TableName: RES_TABLE,
-    //       FilterExpression: 'userId = :uid',
-    //       ExpressionAttributeValues: { ':uid': req.user.userId }
-    //     }));
-    //     published = scanRes.Items || [];
-    //   } catch (scanErr) {
-    //     console.warn('Scan Results failed, using in-memory fallback', scanErr?.message || scanErr);
-    //     const all = inMemoryStore.getResults();
-    //     published = all.filter(r => r.userId === req.user.userId);
-    //   }
-    // }
+// Get results by userId (student's results)
+export const getMyResults = async (req, res) => {
+  try {
+    // 1) Fetch published results for the user
+    let published = [];
+    try {
+      const result = await ddb.send(new QueryCommand({
+        TableName: RES_TABLE,
+        IndexName: 'userId-index', // GSI for querying by userId
+        KeyConditionExpression: 'userId = :uid',
+        ExpressionAttributeValues: { ':uid': req.user.userId }
+      }));
+      published = result.Items || [];
+    } catch (err) {
+      console.warn('Querying Results table failed, falling back to scan or in-memory', err?.message || err);
+      try scan fallback
+      try {
+        const scanRes = await ddb.send(new ScanCommand({
+          TableName: RES_TABLE,
+          FilterExpression: 'userId = :uid',
+          ExpressionAttributeValues: { ':uid': req.user.userId }
+        }));
+        published = scanRes.Items || [];
+      } catch (scanErr) {
+        console.warn('Scan Results failed, using in-memory fallback', scanErr?.message || scanErr);
+        const all = inMemoryStore.getResults();
+        published = all.filter(r => r.userId === req.user.userId);
+      }
+    }
 
     // 2) Fetch submissions for the user that are still pending (status = 'submitted')
     let pending = [];
@@ -310,154 +242,21 @@ export const evaluateSubmission = async (req, res) => {
       }));
       const items = subRes.Items || [];
       pending = items.filter(s => s.status === 'submitted');
-    // } catch (err) {
-    //   console.warn('Querying Submissions table failed, falling back to in-memory', err?.message || err);
-    //   const allSubs = inMemoryStore.getSubmissions();
-    //   pending = allSubs.filter(s => (s.userId === req.user.userId) && (s.status === 'submitted'));
-    // }
- try {
-          const examRes = await ddb.send(new GetCommand({ 
-            TableName: EXAM_TABLE, 
-            Key: { examId: submission.examId } 
-          }));
-          
-          return {
-            ...submission,
-            examName: examRes?.Item?.title || examRes?.Item?.examName || `Exam ${submission.examId}`,
-            subject: examRes?.Item?.subject || 'General',
-            examType: examRes?.Item?.examType || 'MCQ',
-            status: 'pending' // Normalize status
-          };
-        } catch (examErr) {
-          console.warn(`Failed to fetch exam ${submission.examId}:`, examErr.message);
-          return {
-            ...submission,
-            examName: `Exam ${submission.examId}`,
-            subject: 'General',
-            examType: 'Unknown',
-            status: 'pending'
-          };
-        }
-      }));
     } catch (err) {
-      console.warn('Querying Submissions table failed:', err.message);
-    }
-
-
-      
-
-    // Return combined array: published results first, then pending submissions
-//     return res.json([...(published || []), ...(pending || [])]);
-//   } catch (err) {
-//     console.error('Get my results error:', err);
-//     // Fallback to Scan if GSI doesn't exist
-//     try {
-//       const scanResult = await ddb.send(new ScanCommand({
-//         TableName: RES_TABLE,
-//         FilterExpression: 'userId = :uid',
-//         ExpressionAttributeValues: { ':uid': req.user.userId }
-//       }));
-//       res.json(scanResult.Items || []);
-//     } catch (scanErr) {
-//       // Final fallback: in-memory results (dev)
-//       try {
-//         const all = inMemoryStore.getResults();
-//         const filtered = all.filter(r => r.userId === req.user.userId);
-//         return res.json(filtered);
-//       } catch (memErr) {
-//         console.error('In-memory results fallback failed', memErr?.message || memErr);
-//         res.status(500).json({ message: 'Failed to fetch results' });
-//       }
-//     }
-//   }
-// };
-
-
-// Updated getMyResults function (REPLACE the entire function)
-export const getMyResults = async (req, res) => {
-  try {
-    // 1) Fetch published results for the user
-    let published = [];
-    try {
-      const result = await ddb.send(new QueryCommand({
-        TableName: RES_TABLE,
-        IndexName: 'userId-index',
-        KeyConditionExpression: 'userId = :uid',
-        ExpressionAttributeValues: { ':uid': req.user.userId }
-      }));
-      published = result.Items || [];
-      
-      // Get exam details for each result
-      for (let i = 0; i < published.length; i++) {
-        const examDetails = await getExamDetails(published[i].examId);
-        published[i] = {
-          ...published[i],
-          ...examDetails,
-          status: 'published'
-        };
-      }
-    } catch (err) {
-      console.warn('Querying Results table failed:', err.message);
-      // Fallback to scan
-      try {
-        const scanRes = await ddb.send(new ScanCommand({
-          TableName: RES_TABLE,
-          FilterExpression: 'userId = :uid',
-          ExpressionAttributeValues: { ':uid': req.user.userId }
-        }));
-        published = scanRes.Items || [];
-        
-        // Get exam details for scan results too
-        for (let i = 0; i < published.length; i++) {
-          const examDetails = await getExamDetails(published[i].examId);
-          published[i] = {
-            ...published[i],
-            ...examDetails,
-            status: 'published'
-          };
-        }
-      } catch (scanErr) {
-        console.warn('Scan Results failed:', scanErr.message);
-        // Fallback to in-memory
-        const all = inMemoryStore.getResults ? inMemoryStore.getResults() : [];
-        published = all.filter(r => r.userId === req.user.userId);
-      }
-    }
-
-    // 2) Fetch pending submissions
-    let pending = [];
-    try {
-      const subRes = await ddb.send(new QueryCommand({
-        TableName: SUB_TABLE,
-        IndexName: 'userId-index',
-        KeyConditionExpression: 'userId = :uid',
-        ExpressionAttributeValues: { ':uid': req.user.userId }
-      }));
-      const items = subRes.Items || [];
-      pending = items.filter(s => s.status === 'submitted');
-      
-      // Get exam details for each pending submission
-      for (let i = 0; i < pending.length; i++) {
-        const examDetails = await getExamDetails(pending[i].examId);
-        pending[i] = {
-          ...pending[i],
-          ...examDetails,
-          status: 'pending'
-        };
-      }
-    } catch (err) {
-      console.warn('Querying Submissions table failed:', err.message);
-      // Fallback to in-memory
-      const allSubs = inMemoryStore.getSubmissions ? inMemoryStore.getSubmissions() : [];
+      console.warn('Querying Submissions table failed, falling back to in-memory', err?.message || err);
+      const allSubs = inMemoryStore.getSubmissions();
       pending = allSubs.filter(s => (s.userId === req.user.userId) && (s.status === 'submitted'));
     }
 
-    // Return combined array
-    return res.json([...published, ...pending]);
+
+
+      
+
+    Return combined array: published results first, then pending submissions
+    return res.json([...(published || []), ...(pending || [])]);
   } catch (err) {
     console.error('Get my results error:', err);
-    
-    // Final fallback
+    // Fallback to Scan if GSI doesn't exist
     try {
       const scanResult = await ddb.send(new ScanCommand({
         TableName: RES_TABLE,
@@ -466,27 +265,25 @@ export const getMyResults = async (req, res) => {
       }));
       res.json(scanResult.Items || []);
     } catch (scanErr) {
-      // In-memory fallback
+      // Final fallback: in-memory results (dev)
       try {
-        const all = inMemoryStore.getResults ? inMemoryStore.getResults() : [];
+        const all = inMemoryStore.getResults();
         const filtered = all.filter(r => r.userId === req.user.userId);
-        res.json(filtered);
+        return res.json(filtered);
       } catch (memErr) {
-        console.error('All fallbacks failed:', memErr.message);
-        res.status(500).json({ 
-          message: 'Failed to fetch results',
-          error: err.message 
-        });
+        console.error('In-memory results fallback failed', memErr?.message || memErr);
+        res.status(500).json({ message: 'Failed to fetch results' });
       }
     }
   }
 };
 
 
-    // Return combined array with normalized data
-    return res.json([...published, ...pending]);
-  } catch (err) {
-    console.error('Get my results error:', err);
-    res.status(500).json({ message: 'Failed to fetch results' });
-  }
-};
+
+//     // Return combined array with normalized data
+//     return res.json([...published, ...pending]);
+//   } catch (err) {
+//     console.error('Get my results error:', err);
+//     res.status(500).json({ message: 'Failed to fetch results' });
+//   }
+// };
