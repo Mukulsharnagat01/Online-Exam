@@ -29,10 +29,10 @@ import authMiddleware, { isAdmin } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/submit-exam', authMiddleware, submitExam);
+router.post('/api/submit-exam', authMiddleware, submitExam);
 router.get('/api/admin/submissions/', authMiddleware, isAdmin, getAllSubmissions);
-router.get('/my-submissions', authMiddleware, getMySubmissions);
-router.get('/my-results', authMiddleware, getMyResults); // ✅ Get student's results by userId
-router.post('/admin/evaluate/:submissionId', authMiddleware, isAdmin, evaluateSubmission);
+router.get('/api/my-submissions', authMiddleware, getMySubmissions);
+router.get('/api/my-results', authMiddleware, getMyResults); // ✅ Get student's results by userId
+router.post('/api/admin/evaluate/:submissionId', authMiddleware, isAdmin, evaluateSubmission);
 
 export default router;
