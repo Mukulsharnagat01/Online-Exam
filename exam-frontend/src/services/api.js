@@ -285,7 +285,7 @@ export const adminAPI = {
   // Get all submissions (admin only)
   getSubmissions: async () => {
     try {
-      const response = await api.get('/admin/submissions');
+      const response = await api.get('/api/admin/submissions');
       return response.data;
     } catch (error) {
       console.error('Get submissions error:', error);
@@ -314,7 +314,7 @@ export const adminAPI = {
   // Submit exam answers
   submitExam: async (submissionData) => {
     try {
-      const response = await api.post('/submissions', submissionData);
+      const response = await api.post('/api/submissions', submissionData);
       return response.data;
     } catch (error) {
       console.error('Submit exam error:', error);
@@ -328,7 +328,7 @@ export const adminAPI = {
   // Get student submissions summary
   getStudentSubmissions: async () => {
     try {
-      const response = await api.get('/student-submissions');
+      const response = await api.get('/api/student-submissions');
       return response.data;
     } catch (error) {
       console.error('Get student submissions error:', error);
@@ -342,7 +342,7 @@ export const adminAPI = {
   // Delete exam (admin)
   deleteExam: async (examId) => {
     try {
-      const response = await api.delete(`/exams/${examId}`);
+      const response = await api.delete(`/api/exams/${examId}`);
       return response.data;
     } catch (error) {
       console.error('Delete exam error:', error);
@@ -357,7 +357,7 @@ export const adminAPI = {
 export const submissionsAPI = {
   getAdminSubmissions: async () => {
     try {
-      const response = await api.get('/admin/submissions');
+      const response = await api.get('/api/admin/submissions');
       return response.data;
     } catch (error) {
       console.error('Get admin submissions error:', error);
@@ -386,7 +386,7 @@ export const submissionsAPI = {
   
   evaluateSubmission: async (submissionId, obtainedMarks) => {
     try {
-      const response = await api.post(`/admin/evaluate/${submissionId}`, {
+      const response = await api.post(`/api/admin/evaluate/${submissionId}`, {
         obtainedMarks
       });
       return response.data;
