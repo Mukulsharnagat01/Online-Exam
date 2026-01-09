@@ -1,17 +1,6 @@
 // // Simple in-memory store for development/testing
 // Simple in-memory store for development/testing
-const submissions = [
-  {
-    submissionId: 'TEST-001',
-    examId: 'EXAM-001',
-    userId: 'user123',
-    userName: 'Test User',
-    status: 'submitted',
-    submittedAt: new Date().toISOString(),
-    answers: { q1: 'A', q2: 'B' },
-    mcqScore: 8
-  }
-];
+const submissions = [];
 const results = [];
 const exams = [];
 
