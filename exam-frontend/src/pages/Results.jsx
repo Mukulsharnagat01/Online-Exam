@@ -1,352 +1,12 @@
 
 
-import React, { useState, useEffect } from 'react';
-import { Award, Clock, Download, Eye, FileText, Filter } from 'lucide-react';
-import api from '../services/api';
-import { toast } from 'react-hot-toast';
-
-const Results = () => {
-  const [results, setResults] = useState([]);
-  const [filteredResults, setFilteredResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, published, pending
-
-  useEffect(() => {
-    fetchResults();
-  }, []);
-
-  useEffect(() => {
-    filterResults();
-  }, [filter, results]);
-
-  const fetchResults = async () => {
-    try {
-      console.log('🔍 Fetching results...');
-      console.log('🔍 API base URL:', api.defaults.baseURL);
-      console.log('🔍 Token:', localStorage.getItem('authToken') ? 'Present' : 'Not found');
-      // Fetch results from Results table (published results)
-      const response = await api.get('/submissions/my-results');
-      console.log('✅ Results response:', response.data);
-      
-      // Handle different response formats
-      let resultsData = [];
-      if (Array.isArray(response.data)) {
-        resultsData = response.data;
-      } else if (response.data?.submissions) {
-        resultsData = response.data.submissions;
-      } else if (response.data?.items) {
-        resultsData = response.data.items;
-      } else if (response.data?.result) {
-        // single result object
-        resultsData = [response.data.result];
-      }
-
-      // Normalize backend result shape to frontend expected fields
-      const normalized = resultsData.map(r => ({
-        submissionId: r.submissionId || r.id || r.resultId,
-        status: r.status || r.resultStatus || (r.percentage !== undefined ? 'published' : r.status),
-        score: r.score ?? r.obtainedMarks ?? r.totalMarksObtained ?? r.mcqScore ?? null,
-        totalMarks: r.totalMarks ?? r.totalMarks ?? r.totalMarksObtained ?? null,
-        percentage: r.percentage ?? (r.score && r.totalMarks ? (r.score / r.totalMarks) * 100 : r.percentage) ?? r.percentage,
-        submittedAt: r.submittedAt || r.evaluatedAt || r.timestamp || r.evaluatedAt,
-        examId: r.examId,
-        examTitle: r.examTitle || r.subject || r.title || r.examId,
-        examType: r.examType,
-        timeSpent: r.timeTaken || r.timeSpent || null,
-        remarks: r.feedback || r.remarks || r.message || '',
-        resultUrl: r.resultUrl || r.pdfUrl || null
-      }));
-
-      console.log('✅ Processed results data:', normalized);
-      setResults(normalized);
-    } catch (error) {
-      console.error('❌ Fetch results error:', error);
-      console.error('❌ Error response:', error.response);
-      console.error('❌ Error status:', error.response?.status);
-      console.error('❌ Error data:', error.response?.data);
-      
-      let errorMsg = 'Failed to load results';
-      
-      if (error.response?.status === 401) {
-        errorMsg = 'Please login to view results';
-        toast.error(errorMsg);
-        // Could redirect to login here if needed
-      } else if (error.response?.data?.message) {
-        errorMsg = error.response.data.message;
-      } else if (error.message) {
-        errorMsg = error.message;
-      }
-      
-      toast.error(errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterResults = () => {
-    let filtered = [...results];
-    
-    if (filter === 'published') {
-      filtered = filtered.filter(r => r.status === 'published');
-    } else if (filter === 'pending') {
-      filtered = filtered.filter(r => r.status === 'submitted');
-    }
-    
-    setFilteredResults(filtered);
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'published':
-        return <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Result Published</span>;
-      case 'submitted':
-        return <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Evaluation Pending</span>;
-      default:
-        return <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Submitted</span>;
-    }
-  };
-
-  const getGradeColor = (percentage) => {
-    if (percentage >= 80) return 'text-green-600';
-    if (percentage >= 60) return 'text-blue-600';
-    if (percentage >= 40) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getGrade = (percentage) => {
-    if (percentage >= 80) return 'A+';
-    if (percentage >= 70) return 'A';
-    if (percentage >= 60) return 'B';
-    if (percentage >= 50) return 'C';
-    if (percentage >= 40) return 'D';
-    return 'F';
-  };
-
-  const downloadResult = (resultUrl) => {
-    if (resultUrl) {
-      window.open(resultUrl, '_blank');
-    } else {
-      toast.error('Result PDF not available');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <Award className="w-16 h-16 mx-auto mb-4" />
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Exam Results</h1>
-            <p className="text-lg text-green-100">
-              View your exam performance and results
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <h2 className="text-xl font-bold text-gray-900">
-                {filteredResults.length} {filter === 'all' ? 'Total' : filter} Results
-              </h2>
-            </div>
-            
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilter('published')}
-                className={`px-4 py-2 rounded-lg ${filter === 'published' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-              >
-                Published
-              </button>
-              <button
-                onClick={() => setFilter('pending')}
-                className={`px-4 py-2 rounded-lg ${filter === 'pending' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-              >
-                Pending
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Results List */}
-        {filteredResults.length > 0 ? (
-          <div className="space-y-6">
-            {filteredResults.map((result) => {
-              const percentage = result.score && result.totalMarks 
-                ? ((result.score / result.totalMarks) * 100).toFixed(1)
-                : null;
-
-              return (
-                <div key={result.submissionId} className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">{result.examTitle}</h3>
-                        <div className="flex items-center mt-2 space-x-3">
-                          {getStatusBadge(result.status)}
-                          <span className="text-sm text-gray-500">
-                            {new Date(result.submittedAt).toLocaleDateString()}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {result.examType?.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {result.status === 'published' && percentage && (
-                        <div className="mt-4 md:mt-0 text-center">
-                          <div className={`text-3xl font-bold ${getGradeColor(parseFloat(percentage))}`}>
-                            {percentage}%
-                          </div>
-                          <div className="text-sm text-gray-600">Grade: {getGrade(parseFloat(percentage))}</div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-500 mb-1">Score</div>
-                        <div className="text-2xl font-bold text-gray-900">
-                          {result.score !== null ? `${result.score}/${result.totalMarks}` : '--'}
-                        </div>
-                      </div>
-                      
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-500 mb-1">Time Spent</div>
-                        <div className="text-lg font-bold text-gray-900">
-                          {result.timeSpent ? `${Math.floor(result.timeSpent / 60)}m ${result.timeSpent % 60}s` : '--'}
-                        </div>
-                      </div>
-                      
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-500 mb-1">Submission ID</div>
-                        <div className="text-sm font-mono text-gray-700 truncate">
-                          {result.submissionId}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {result.remarks && result.status === 'published' && (
-                      <div className="mb-6">
-                        <h4 className="font-bold text-gray-900 mb-2">Remarks:</h4>
-                        <p className="text-gray-700 bg-blue-50 p-4 rounded-lg">{result.remarks}</p>
-                      </div>
-                    )}
-                    
-                    {/* <div className="flex justify-end space-x-3">
-                      {result.status === 'published' && (
-                        <>
-                          <button
-                            onClick={() => downloadResult(result.resultUrl)}
-                            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download Result
-                          </button>
-                          {result.resultUrl && (
-                            <button
-                              onClick={() => window.open(result.resultUrl, '_blank')}
-                              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              View PDF
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div> */}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-600 mb-2">No results found</h3>
-            <p className="text-gray-500">
-              {filter !== 'all' 
-                ? `No ${filter} results available` 
-                : 'You have not attempted any exams yet'}
-            </p>
-          </div>
-        )}
-
-        {/* Summary Stats */}
-        {filteredResults.length > 0 && (
-          <div className="mt-8 bg-white rounded-xl shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Performance Summary</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {filteredResults.filter(r => r.status === 'published').length}
-                </div>
-                <div className="text-sm text-gray-600">Results Published</div>
-              </div>
-              <div className="text-center p-4">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {filteredResults.filter(r => r.status === 'submitted').length}
-                </div>
-                <div className="text-sm text-gray-600">Pending Evaluation</div>
-              </div>
-              <div className="text-center p-4">
-                <div className="text-2xl font-bold text-blue-600">
-                  {filteredResults.length}
-                </div>
-                <div className="text-sm text-gray-600">Total Attempts</div>
-              </div>
-              <div className="text-center p-4">
-                <div className="text-2xl font-bold text-purple-600">
-                  {filteredResults.filter(r => r.status === 'published').length > 0
-                    ? filteredResults
-                        .filter(r => r.status === 'published')
-                        .reduce((acc, r) => {
-                          const percentage = r.score && r.totalMarks ? (r.score / r.totalMarks) * 100 : 0;
-                          return acc + percentage;
-                        }, 0) / filteredResults.filter(r => r.status === 'published').length
-                    : 0
-                  }%
-                </div>
-                <div className="text-sm text-gray-600">Average Score</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Results;
-
-
-
-
 // import React, { useState, useEffect } from 'react';
 // import { Award, Clock, Download, Eye, FileText, Filter } from 'lucide-react';
 // import api from '../services/api';
 // import { toast } from 'react-hot-toast';
 
 // const Results = () => {
-//   const [allResults, setAllResults] = useState([]); // All results (published + pending)
+//   const [results, setResults] = useState([]);
 //   const [filteredResults, setFilteredResults] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [filter, setFilter] = useState('all'); // all, published, pending
@@ -355,88 +15,98 @@ export default Results;
 //     fetchResults();
 //   }, []);
 
-//   // Fetch results function
+//   useEffect(() => {
+//     filterResults();
+//   }, [filter, results]);
+
 //   const fetchResults = async () => {
 //     try {
 //       console.log('🔍 Fetching results...');
+//       console.log('🔍 API base URL:', api.defaults.baseURL);
+//       console.log('🔍 Token:', localStorage.getItem('authToken') ? 'Present' : 'Not found');
+//       // Fetch results from Results table (published results)
 //       const response = await api.get('/submissions/my-results');
 //       console.log('✅ Results response:', response.data);
       
+//       // Handle different response formats
 //       let resultsData = [];
 //       if (Array.isArray(response.data)) {
 //         resultsData = response.data;
 //       } else if (response.data?.submissions) {
 //         resultsData = response.data.submissions;
+//       } else if (response.data?.items) {
+//         resultsData = response.data.items;
+//       } else if (response.data?.result) {
+//         // single result object
+//         resultsData = [response.data.result];
 //       }
-      
-//       // Normalize the data
+
+//       // Normalize backend result shape to frontend expected fields
 //       const normalized = resultsData.map(r => ({
 //         submissionId: r.submissionId || r.id || r.resultId,
-//         status: r.status || (r.percentage !== undefined ? 'published' : 'pending'),
-//         score: r.score ?? r.obtainedMarks ?? r.mcqScore ?? null,
-//         totalMarks: r.totalMarks ?? r.totalMarks ?? 100,
-//         percentage: r.percentage ?? (r.obtainedMarks && r.totalMarks ? 
-//           ((r.obtainedMarks / r.totalMarks) * 100).toFixed(1) : null),
-//         submittedAt: r.submittedAt || r.evaluatedAt || new Date().toISOString(),
+//         status: r.status || r.resultStatus || (r.percentage !== undefined ? 'published' : r.status),
+//         score: r.score ?? r.obtainedMarks ?? r.totalMarksObtained ?? r.mcqScore ?? null,
+//         totalMarks: r.totalMarks ?? r.totalMarks ?? r.totalMarksObtained ?? null,
+//         percentage: r.percentage ?? (r.score && r.totalMarks ? (r.score / r.totalMarks) * 100 : r.percentage) ?? r.percentage,
+//         submittedAt: r.submittedAt || r.evaluatedAt || r.timestamp || r.evaluatedAt,
 //         examId: r.examId,
-//         // Use examName if available, otherwise examId
-//         examTitle: r.examName || r.examTitle || r.subject || `Exam ${r.examId}`,
-//         subject: r.subject || 'General',
-//         examType: r.examType || 'MCQ',
+//         examTitle: r.examTitle || r.subject || r.title || r.examId,
+//         examType: r.examType,
 //         timeSpent: r.timeTaken || r.timeSpent || null,
-//         remarks: r.feedback || r.remarks || '',
-//         resultUrl: r.resultUrl || null
+//         remarks: r.feedback || r.remarks || r.message || '',
+//         resultUrl: r.resultUrl || r.pdfUrl || null
 //       }));
-      
+
 //       console.log('✅ Processed results data:', normalized);
-//       setAllResults(normalized);
-//       applyFilter('all', normalized); // Initial filter
+//       setResults(normalized);
 //     } catch (error) {
 //       console.error('❌ Fetch results error:', error);
-//       toast.error(error.response?.data?.message || 'Failed to load results');
+//       console.error('❌ Error response:', error.response);
+//       console.error('❌ Error status:', error.response?.status);
+//       console.error('❌ Error data:', error.response?.data);
+      
+//       let errorMsg = 'Failed to load results';
+      
+//       if (error.response?.status === 401) {
+//         errorMsg = 'Please login to view results';
+//         toast.error(errorMsg);
+//         // Could redirect to login here if needed
+//       } else if (error.response?.data?.message) {
+//         errorMsg = error.response.data.message;
+//       } else if (error.message) {
+//         errorMsg = error.message;
+//       }
+      
+//       toast.error(errorMsg);
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
 
-//   // Apply filter function
-//   const applyFilter = (filterType, results = allResults) => {
+//   const filterResults = () => {
 //     let filtered = [...results];
     
-//     if (filterType === 'published') {
+//     if (filter === 'published') {
 //       filtered = filtered.filter(r => r.status === 'published');
-//     } else if (filterType === 'pending') {
-//       filtered = filtered.filter(r => r.status === 'pending' || r.status === 'submitted');
+//     } else if (filter === 'pending') {
+//       filtered = filtered.filter(r => r.status === 'submitted');
 //     }
     
 //     setFilteredResults(filtered);
 //   };
 
-//   // Handle filter change
-//   const handleFilterChange = (newFilter) => {
-//     setFilter(newFilter);
-//     applyFilter(newFilter);
-//   };
-
 //   const getStatusBadge = (status) => {
-//     const statusMap = {
-//       'published': { label: 'Result Published', color: 'bg-green-100 text-green-800' },
-//       'approved': { label: 'Result Published', color: 'bg-green-100 text-green-800' },
-//       'pending': { label: 'Evaluation Pending', color: 'bg-yellow-100 text-yellow-800' },
-//       'submitted': { label: 'Evaluation Pending', color: 'bg-yellow-100 text-yellow-800' }
-//     };
-    
-//     const statusInfo = statusMap[status] || { label: 'Submitted', color: 'bg-gray-100 text-gray-800' };
-    
-//     return (
-//       <span className={`px-3 py-1 ${statusInfo.color} rounded-full text-sm`}>
-//         {statusInfo.label}
-//       </span>
-//     );
+//     switch (status) {
+//       case 'published':
+//         return <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Result Published</span>;
+//       case 'submitted':
+//         return <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Evaluation Pending</span>;
+//       default:
+//         return <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Submitted</span>;
+//     }
 //   };
 
 //   const getGradeColor = (percentage) => {
-//     if (!percentage) return 'text-gray-600';
 //     if (percentage >= 80) return 'text-green-600';
 //     if (percentage >= 60) return 'text-blue-600';
 //     if (percentage >= 40) return 'text-yellow-600';
@@ -444,13 +114,20 @@ export default Results;
 //   };
 
 //   const getGrade = (percentage) => {
-//     if (!percentage) return 'N/A';
 //     if (percentage >= 80) return 'A+';
 //     if (percentage >= 70) return 'A';
 //     if (percentage >= 60) return 'B';
 //     if (percentage >= 50) return 'C';
 //     if (percentage >= 40) return 'D';
 //     return 'F';
+//   };
+
+//   const downloadResult = (resultUrl) => {
+//     if (resultUrl) {
+//       window.open(resultUrl, '_blank');
+//     } else {
+//       toast.error('Result PDF not available');
+//     }
 //   };
 
 //   if (loading) {
@@ -484,26 +161,27 @@ export default Results;
 //               <h2 className="text-xl font-bold text-gray-900">
 //                 {filteredResults.length} {filter === 'all' ? 'Total' : filter} Results
 //               </h2>
-//               <p className="text-sm text-gray-600">
-//                 Published: {allResults.filter(r => r.status === 'published' || r.status === 'approved').length} | 
-//                 Pending: {allResults.filter(r => r.status === 'pending' || r.status === 'submitted').length}
-//               </p>
 //             </div>
             
 //             <div className="flex space-x-2">
-//               {['all', 'published', 'pending'].map((filterType) => (
-//                 <button
-//                   key={filterType}
-//                   onClick={() => handleFilterChange(filterType)}
-//                   className={`px-4 py-2 rounded-lg capitalize ${
-//                     filter === filterType 
-//                       ? 'bg-green-600 text-white' 
-//                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-//                   }`}
-//                 >
-//                   {filterType}
-//                 </button>
-//               ))}
+//               <button
+//                 onClick={() => setFilter('all')}
+//                 className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+//               >
+//                 All
+//               </button>
+//               <button
+//                 onClick={() => setFilter('published')}
+//                 className={`px-4 py-2 rounded-lg ${filter === 'published' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+//               >
+//                 Published
+//               </button>
+//               <button
+//                 onClick={() => setFilter('pending')}
+//                 className={`px-4 py-2 rounded-lg ${filter === 'pending' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+//               >
+//                 Pending
+//               </button>
 //             </div>
 //           </div>
 //         </div>
@@ -512,10 +190,9 @@ export default Results;
 //         {filteredResults.length > 0 ? (
 //           <div className="space-y-6">
 //             {filteredResults.map((result) => {
-//               const percentage = result.percentage ? 
-//                 parseFloat(result.percentage) : 
-//                 (result.score && result.totalMarks ? 
-//                   ((result.score / result.totalMarks) * 100).toFixed(1) : null);
+//               const percentage = result.score && result.totalMarks 
+//                 ? ((result.score / result.totalMarks) * 100).toFixed(1)
+//                 : null;
 
 //               return (
 //                 <div key={result.submissionId} className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -526,26 +203,20 @@ export default Results;
 //                         <div className="flex items-center mt-2 space-x-3">
 //                           {getStatusBadge(result.status)}
 //                           <span className="text-sm text-gray-500">
-//                             {new Date(result.submittedAt).toLocaleDateString('en-IN', {
-//                               day: 'numeric',
-//                               month: 'short',
-//                               year: 'numeric'
-//                             })}
+//                             {new Date(result.submittedAt).toLocaleDateString()}
 //                           </span>
-//                           {result.subject && (
-//                             <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-//                               {result.subject}
-//                             </span>
-//                           )}
+//                           <span className="text-sm text-gray-500">
+//                             {result.examType?.toUpperCase()}
+//                           </span>
 //                         </div>
 //                       </div>
                       
-//                       {(result.status === 'published' || result.status === 'approved') && percentage && (
+//                       {result.status === 'published' && percentage && (
 //                         <div className="mt-4 md:mt-0 text-center">
-//                           <div className={`text-3xl font-bold ${getGradeColor(percentage)}`}>
+//                           <div className={`text-3xl font-bold ${getGradeColor(parseFloat(percentage))}`}>
 //                             {percentage}%
 //                           </div>
-//                           <div className="text-sm text-gray-600">Grade: {getGrade(percentage)}</div>
+//                           <div className="text-sm text-gray-600">Grade: {getGrade(parseFloat(percentage))}</div>
 //                         </div>
 //                       )}
 //                     </div>
@@ -554,33 +225,54 @@ export default Results;
 //                       <div className="bg-gray-50 p-4 rounded-lg">
 //                         <div className="text-sm text-gray-500 mb-1">Score</div>
 //                         <div className="text-2xl font-bold text-gray-900">
-//                           {result.score !== null ? 
-//                             `${result.score}/${result.totalMarks}` : 
-//                             'Not evaluated'}
+//                           {result.score !== null ? `${result.score}/${result.totalMarks}` : '--'}
 //                         </div>
 //                       </div>
                       
 //                       <div className="bg-gray-50 p-4 rounded-lg">
-//                         <div className="text-sm text-gray-500 mb-1">Exam Type</div>
+//                         <div className="text-sm text-gray-500 mb-1">Time Spent</div>
 //                         <div className="text-lg font-bold text-gray-900">
-//                           {result.examType || 'MCQ'}
+//                           {result.timeSpent ? `${Math.floor(result.timeSpent / 60)}m ${result.timeSpent % 60}s` : '--'}
 //                         </div>
 //                       </div>
                       
 //                       <div className="bg-gray-50 p-4 rounded-lg">
 //                         <div className="text-sm text-gray-500 mb-1">Submission ID</div>
-//                         <div className="text-sm font-mono text-gray-700 truncate" title={result.submissionId}>
-//                           {result.submissionId.substring(0, 15)}...
+//                         <div className="text-sm font-mono text-gray-700 truncate">
+//                           {result.submissionId}
 //                         </div>
 //                       </div>
 //                     </div>
                     
-//                     {result.remarks && (result.status === 'published' || result.status === 'approved') && (
+//                     {result.remarks && result.status === 'published' && (
 //                       <div className="mb-6">
 //                         <h4 className="font-bold text-gray-900 mb-2">Remarks:</h4>
 //                         <p className="text-gray-700 bg-blue-50 p-4 rounded-lg">{result.remarks}</p>
 //                       </div>
 //                     )}
+                    
+//                     {/* <div className="flex justify-end space-x-3">
+//                       {result.status === 'published' && (
+//                         <>
+//                           <button
+//                             onClick={() => downloadResult(result.resultUrl)}
+//                             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+//                           >
+//                             <Download className="w-4 h-4 mr-2" />
+//                             Download Result
+//                           </button>
+//                           {result.resultUrl && (
+//                             <button
+//                               onClick={() => window.open(result.resultUrl, '_blank')}
+//                               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+//                             >
+//                               <Eye className="w-4 h-4 mr-2" />
+//                               View PDF
+//                             </button>
+//                           )}
+//                         </>
+//                       )}
+//                     </div> */}
 //                   </div>
 //                 </div>
 //               );
@@ -599,44 +291,39 @@ export default Results;
 //         )}
 
 //         {/* Summary Stats */}
-//         {allResults.length > 0 && (
+//         {filteredResults.length > 0 && (
 //           <div className="mt-8 bg-white rounded-xl shadow p-6">
 //             <h3 className="text-lg font-bold text-gray-900 mb-4">Performance Summary</h3>
 //             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 //               <div className="text-center p-4">
 //                 <div className="text-2xl font-bold text-green-600">
-//                   {allResults.filter(r => r.status === 'published' || r.status === 'approved').length}
+//                   {filteredResults.filter(r => r.status === 'published').length}
 //                 </div>
 //                 <div className="text-sm text-gray-600">Results Published</div>
 //               </div>
 //               <div className="text-center p-4">
 //                 <div className="text-2xl font-bold text-yellow-600">
-//                   {allResults.filter(r => r.status === 'pending' || r.status === 'submitted').length}
+//                   {filteredResults.filter(r => r.status === 'submitted').length}
 //                 </div>
 //                 <div className="text-sm text-gray-600">Pending Evaluation</div>
 //               </div>
 //               <div className="text-center p-4">
 //                 <div className="text-2xl font-bold text-blue-600">
-//                   {allResults.length}
+//                   {filteredResults.length}
 //                 </div>
 //                 <div className="text-sm text-gray-600">Total Attempts</div>
 //               </div>
 //               <div className="text-center p-4">
 //                 <div className="text-2xl font-bold text-purple-600">
-//                   {(() => {
-//                     const publishedResults = allResults.filter(r => 
-//                       r.status === 'published' || r.status === 'approved'
-//                     );
-//                     if (publishedResults.length === 0) return '0%';
-                    
-//                     const totalPercentage = publishedResults.reduce((acc, r) => {
-//                       const percentage = r.percentage ? parseFloat(r.percentage) : 
-//                         (r.score && r.totalMarks ? (r.score / r.totalMarks) * 100 : 0);
-//                       return acc + percentage;
-//                     }, 0);
-                    
-//                     return `${(totalPercentage / publishedResults.length).toFixed(1)}%`;
-//                   })()}
+//                   {filteredResults.filter(r => r.status === 'published').length > 0
+//                     ? filteredResults
+//                         .filter(r => r.status === 'published')
+//                         .reduce((acc, r) => {
+//                           const percentage = r.score && r.totalMarks ? (r.score / r.totalMarks) * 100 : 0;
+//                           return acc + percentage;
+//                         }, 0) / filteredResults.filter(r => r.status === 'published').length
+//                     : 0
+//                   }%
 //                 </div>
 //                 <div className="text-sm text-gray-600">Average Score</div>
 //               </div>
@@ -649,3 +336,294 @@ export default Results;
 // };
 
 // export default Results;
+
+
+
+import React, { useState, useEffect } from 'react';
+import { Award, Clock, Download, Eye, FileText, Filter } from 'lucide-react';
+import api from '../services/api';
+import { toast } from 'react-hot-toast';
+
+const Results = () => {
+  const [allResults, setAllResults] = useState([]); // ALL results
+  const [displayResults, setDisplayResults] = useState([]); // Displayed results
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all'); // all, published, pending
+
+  useEffect(() => {
+    fetchResults();
+  }, []);
+
+  // Fetch results
+  const fetchResults = async () => {
+    try {
+      const response = await api.get('/submissions/my-results');
+      let resultsData = Array.isArray(response.data) ? response.data : [];
+      
+      // Normalize data
+      const normalized = resultsData.map(r => ({
+        submissionId: r.submissionId || r.id || r.resultId,
+        // Normalize status
+        status: r.status === 'approved' ? 'published' : 
+                r.status === 'submitted' ? 'pending' : 
+                r.status || 'pending',
+        score: r.obtainedMarks ?? r.score ?? r.totalMarksObtained ?? r.mcqScore ?? 0,
+        totalMarks: r.totalMarks || 100,
+        percentage: r.percentage ?? (r.obtainedMarks && r.totalMarks ? 
+          ((r.obtainedMarks / r.totalMarks) * 100).toFixed(1) : null),
+        submittedAt: r.submittedAt || r.evaluatedAt || new Date().toISOString(),
+        examId: r.examId,
+        // Use backend-provided names or fallback
+        examName: r.examName || r.examTitle || `Exam ${r.examId}`,
+        subject: r.subject || 'General',
+        examType: r.examType || 'MCQ',
+        remarks: r.feedback || r.remarks || '',
+        userId: r.userId
+      }));
+      
+      console.log('Processed results:', normalized);
+      setAllResults(normalized);
+      filterResults('all', normalized); // Initial filter
+    } catch (error) {
+      console.error('Fetch results error:', error);
+      toast.error('Failed to load results');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter results based on tab
+  const filterResults = (tab, results = allResults) => {
+    let filtered = [...results];
+    
+    if (tab === 'published') {
+      filtered = filtered.filter(r => r.status === 'published');
+    } else if (tab === 'pending') {
+      filtered = filtered.filter(r => r.status === 'pending');
+    }
+    // 'all' - show all results
+    
+    setDisplayResults(filtered);
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    filterResults(tab);
+  };
+
+  // Status badge component
+  const StatusBadge = ({ status }) => {
+    const config = {
+      published: { label: 'Published', color: 'bg-green-100 text-green-800' },
+      approved: { label: 'Published', color: 'bg-green-100 text-green-800' },
+      pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+      submitted: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' }
+    };
+    
+    const { label, color } = config[status] || { label: status, color: 'bg-gray-100 text-gray-800' };
+    
+    return (
+      <span className={`px-3 py-1 rounded-full text-sm font-medium ${color}`}>
+        {label}
+      </span>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-green-600 to-emerald-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <Award className="w-16 h-16 mx-auto mb-4" />
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Exam Results</h1>
+            <p className="text-lg text-green-100">
+              View your exam performance and results
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs and Stats */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="bg-white rounded-xl shadow p-6 mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">My Results</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Total: {allResults.length} | 
+                Published: {allResults.filter(r => r.status === 'published').length} | 
+                Pending: {allResults.filter(r => r.status === 'pending').length}
+              </p>
+            </div>
+            
+            <div className="flex space-x-2 mt-4 md:mt-0">
+              {['all', 'published', 'pending'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`px-4 py-2 rounded-lg capitalize font-medium ${
+                    activeTab === tab
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab} ({tab === 'all' ? allResults.length : 
+                         tab === 'published' ? allResults.filter(r => r.status === 'published').length : 
+                         allResults.filter(r => r.status === 'pending').length})
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Current Tab Info */}
+          <div className="text-center">
+            <p className="text-gray-700">
+              Showing <span className="font-bold">{displayResults.length}</span> results
+              {activeTab !== 'all' && ` (${activeTab} only)`}
+            </p>
+          </div>
+        </div>
+
+        {/* Results Grid */}
+        {displayResults.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayResults.map((result, index) => {
+              const percentage = result.percentage ? parseFloat(result.percentage) : 
+                (result.score && result.totalMarks ? 
+                  ((result.score / result.totalMarks) * 100).toFixed(1) : null);
+              
+              return (
+                <div key={result.submissionId || index} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="p-6">
+                    {/* Exam Header */}
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        {result.examName}
+                      </h3>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <StatusBadge status={result.status} />
+                        <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">
+                          {result.subject}
+                        </span>
+                        <span className="text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded">
+                          {result.examType}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Score Section */}
+                    <div className="mb-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-gray-500">Score</p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {result.score}/{result.totalMarks}
+                          </p>
+                        </div>
+                        
+                        {percentage && result.status === 'published' && (
+                          <div className="text-right">
+                            <p className="text-sm text-gray-500">Percentage</p>
+                            <p className={`text-2xl font-bold ${
+                              percentage >= 80 ? 'text-green-600' :
+                              percentage >= 60 ? 'text-blue-600' :
+                              percentage >= 40 ? 'text-yellow-600' : 'text-red-600'
+                            }`}>
+                              {percentage}%
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Details */}
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>Submission ID: {result.submissionId?.substring(0, 10)}...</p>
+                      <p>Date: {new Date(result.submittedAt).toLocaleDateString('en-IN')}</p>
+                      {result.remarks && (
+                        <p className="mt-3 text-gray-700 bg-gray-50 p-3 rounded">
+                          <span className="font-medium">Remarks:</span> {result.remarks}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">No results found</h3>
+            <p className="text-gray-500">
+              {activeTab !== 'all' 
+                ? `No ${activeTab} results available` 
+                : 'You have not attempted any exams yet'}
+            </p>
+            <button
+              onClick={fetchResults}
+              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Refresh Results
+            </button>
+          </div>
+        )}
+
+        {/* Summary Stats */}
+        {allResults.length > 0 && (
+          <div className="mt-8 bg-white rounded-xl shadow p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Performance Summary</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {allResults.filter(r => r.status === 'published').length}
+                </div>
+                <div className="text-sm text-gray-600">Published Results</div>
+              </div>
+              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {allResults.filter(r => r.status === 'pending').length}
+                </div>
+                <div className="text-sm text-gray-600">Pending Evaluation</div>
+              </div>
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {allResults.length}
+                </div>
+                <div className="text-sm text-gray-600">Total Attempts</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">
+                  {(() => {
+                    const published = allResults.filter(r => r.status === 'published');
+                    if (published.length === 0) return '0%';
+                    
+                    const avg = published.reduce((sum, r) => {
+                      const perc = r.percentage ? parseFloat(r.percentage) : 0;
+                      return sum + perc;
+                    }, 0) / published.length;
+                    
+                    return `${avg.toFixed(1)}%`;
+                  })()}
+                </div>
+                <div className="text-sm text-gray-600">Average Score</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Results;
