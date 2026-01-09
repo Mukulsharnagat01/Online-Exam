@@ -33,54 +33,54 @@ export const submitExam = async (req, res) => {
   }
 };
 
-export const getAllSubmissions = async (req, res) => {
-  try {
-    const result = await ddb.send(new ScanCommand({ TableName: SUB_TABLE }));
-    res.json({
-  success: true,
-  submissions: result.Items || []
-});
-
-  } catch (err) {
-    res.status(500).json({ message: 'Failed' });
-  }
-};
-// // Function 1: getAllSubmissions
 // export const getAllSubmissions = async (req, res) => {
 //   try {
-//     console.log('🔍 Fetching from DynamoDB Table:', SUB_TABLE);
-    
-//     // ✅ सिर्फ़ DynamoDB से data लाएँ
-//     const result = await ddb.send(new ScanCommand({ 
-//       TableName: SUB_TABLE,
-//       Limit: 100  // Optional: limit add करें
-//     }));
-    
-//     const submissions = result.Items || [];
-    
-//     console.log('✅ DynamoDB में मिले submissions:', submissions.length);
-    
-//     // ✅ सिर्फ़ DynamoDB data return करें
+//     const result = await ddb.send(new ScanCommand({ TableName: SUB_TABLE }));
 //     res.json({
-//       success: true,
-//       submissions: submissions,  // ✅ यह line important है
-//       count: submissions.length
-//     });
+//   success: true,
+//   submissions: result.Items || []
+// });
 
 //   } catch (err) {
-//     console.error('❌ DynamoDB Error:', err);
-    
-//     // Fallback में भी inMemoryStore का नाम check करें
-//     const memorySubs = inMemoryStore.getSubmissions ? inMemoryStore.getSubmissions() : [];
-    
-//     res.json({
-//       success: true,
-//       submissions: memorySubs,
-//       count: memorySubs.length,
-//       source: 'in-memory-fallback'
-//     });
+//     res.status(500).json({ message: 'Failed' });
 //   }
 // };
+// Function 1: getAllSubmissions
+export const getAllSubmissions = async (req, res) => {
+  try {
+    console.log('🔍 Fetching from DynamoDB Table:', SUB_TABLE);
+    
+    // ✅ सिर्फ़ DynamoDB से data लाएँ
+    const result = await ddb.send(new ScanCommand({ 
+      TableName: SUB_TABLE,
+      Limit: 100  // Optional: limit add करें
+    }));
+    
+    const submissions = result.Items || [];
+    
+    console.log('✅ DynamoDB में मिले submissions:', submissions.length);
+    
+    // ✅ सिर्फ़ DynamoDB data return करें
+    res.json({
+      success: true,
+      submissions: submissions,  // ✅ यह line important है
+      count: submissions.length
+    });
+
+  } catch (err) {
+    console.error('❌ DynamoDB Error:', err);
+    
+    // Fallback में भी inMemoryStore का नाम check करें
+    const memorySubs = inMemoryStore.getSubmissions ? inMemoryStore.getSubmissions() : [];
+    
+    res.json({
+      success: true,
+      submissions: memorySubs,
+      count: memorySubs.length,
+      source: 'in-memory-fallback'
+    });
+  }
+};
 
 export const getMySubmissions = async (req, res) => {
   try {
@@ -216,7 +216,7 @@ export const getMyResults = async (req, res) => {
       published = result.Items || [];
     } catch (err) {
       console.warn('Querying Results table failed, falling back to scan or in-memory', err?.message || err);
-      try scan fallback
+      // try scan fallback
       try {
         const scanRes = await ddb.send(new ScanCommand({
           TableName: RES_TABLE,
@@ -252,7 +252,7 @@ export const getMyResults = async (req, res) => {
 
       
 
-    Return combined array: published results first, then pending submissions
+    // Return combined array: published results first, then pending submissions
     return res.json([...(published || []), ...(pending || [])]);
   } catch (err) {
     console.error('Get my results error:', err);
