@@ -1,10 +1,5 @@
 
-
 import axios from 'axios';
-
-// Simple configuration - Use proxy in dev, full URL in production
-// Vite proxy forwards /api/* to http://localhost:3000
-// Normalize baseURL: prefer '/api' in development to ensure local proxy is used
 const _rawEnvBase = (import.meta.env.VITE_API_URL || '').toString().trim();
 const _envMode = import.meta.env.MODE;
 let normalizedBase = '/api';
