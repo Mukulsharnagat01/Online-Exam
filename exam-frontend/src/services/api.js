@@ -285,7 +285,7 @@ export const adminAPI = {
   // Get all submissions (admin only)
   getSubmissions: async () => {
     try {
-      const response = await api.get('/api/submissions/admin/submissions');
+      const response = await api.get('/submissions/admin/submissions');
       return response.data;
     } catch (error) {
       console.error('Get submissions error:', error);
@@ -343,7 +343,7 @@ export const adminAPI = {
   // Delete exam (admin)
   deleteExam: async (examId) => {
     try {
-      const response = await api.delete(`/api/exams/${examId}`);
+      const response = await api.delete(`/exams/${examId}`);
       return response.data;
     } catch (error) {
       console.error('Delete exam error:', error);
@@ -358,7 +358,7 @@ export const adminAPI = {
 export const submissionsAPI = {
   getAdminSubmissions: async () => {
     try {
-      const response = await api.get('/api/submissions/admin/submissions');
+      const response = await api.get('/submissions/admin/submissions');
       return response.data;
     } catch (error) {
       console.error('Get admin submissions error:', error);
@@ -387,7 +387,7 @@ export const submissionsAPI = {
   
   evaluateSubmission: async (submissionId, obtainedMarks) => {
     try {
-      const response = await api.post(`/api/submissions/admin/evaluate/${submissionId}`, {
+      const response = await api.post(`/submissions/admin/evaluate/${submissionId}`, {
         obtainedMarks
       });
       return response.data;
