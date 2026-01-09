@@ -314,7 +314,8 @@ export const adminAPI = {
   // Submit exam answers
   submitExam: async (submissionData) => {
     try {
-      const response = await api.post('/api/submissions', submissionData);
+      // const response = await api.post('/api/submissions', submissionData);
+       const response = await api.post('/submissions/submit-exam', submissionData);  
       return response.data;
     } catch (error) {
       console.error('Submit exam error:', error);
@@ -357,7 +358,7 @@ export const adminAPI = {
 export const submissionsAPI = {
   getAdminSubmissions: async () => {
     try {
-      const response = await api.get('/api/admin/submissions');
+      const response = await api.get('/api/submissions/admin/submissions');
       return response.data;
     } catch (error) {
       console.error('Get admin submissions error:', error);
@@ -386,7 +387,7 @@ export const submissionsAPI = {
   
   evaluateSubmission: async (submissionId, obtainedMarks) => {
     try {
-      const response = await api.post(`/api/admin/evaluate/${submissionId}`, {
+      const response = await api.post(`/api/submissions/admin/evaluate/${submissionId}`, {
         obtainedMarks
       });
       return response.data;
