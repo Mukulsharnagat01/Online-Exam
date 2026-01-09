@@ -196,11 +196,6 @@ export const evaluateSubmission = async (req, res) => {
 };
 
 
-
-
-
-
-
 // Get results by userId (student's results)
 export const getMyResults = async (req, res) => {
   try {
@@ -247,11 +242,6 @@ export const getMyResults = async (req, res) => {
       const allSubs = inMemoryStore.getSubmissions();
       pending = allSubs.filter(s => (s.userId === req.user.userId) && (s.status === 'submitted'));
     }
-
-
-
-      
-
     // Return combined array: published results first, then pending submissions
     return res.json([...(published || []), ...(pending || [])]);
   } catch (err) {
@@ -278,12 +268,3 @@ export const getMyResults = async (req, res) => {
   }
 };
 
-
-
-//     // Return combined array with normalized data
-//     return res.json([...published, ...pending]);
-//   } catch (err) {
-//     console.error('Get my results error:', err);
-//     res.status(500).json({ message: 'Failed to fetch results' });
-//   }
-// };
