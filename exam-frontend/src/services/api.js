@@ -347,7 +347,7 @@ export const adminAPI = {
   // Delete exam (admin)
   deleteExam: async (examId) => {
     try {
-      const response = await api.delete(`/exams/${examId}`);
+      const response = await api.delete(`/api/exams/${examId}`);
       return response.data;
     } catch (error) {
       console.error('Delete exam error:', error);
@@ -391,7 +391,7 @@ export const submissionsAPI = {
   
   evaluateSubmission: async (submissionId, obtainedMarks) => {
     try {
-      const response = await api.post(`/admin/evaluate/${submissionId}`, {
+      const response = await api.post(`/api/admin/evaluate/${submissionId}`, {
         obtainedMarks
       });
       return response.data;
