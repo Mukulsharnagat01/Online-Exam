@@ -42,7 +42,7 @@ app.use('/submissions', submissionRoutes);
 app.use('/exams', examRoutes);      // ✅ ADD THIS LINE
 app.use('/results', resultRoutes);  // ✅ ADD THIS LINE
 app.use('/student', studentRoutes); // ✅ ADD THIS LINE
-// app.use('/', submissionRoutes);
+app.use('/', submissionRoutes);
 // ==================== EXAM SYSTEM ROUTES ====================
 
 // In-memory storage (temporary - MongoDB / DynamoDB later)
