@@ -319,7 +319,7 @@ export const adminAPI = {
   // Submit exam answers
   submitExam: async (submissionData) => {
     try {
-      const response = await api.post('/submissions', submissionData);
+      const response = await api.post('/api/submissions', submissionData);
       return response.data;
     } catch (error) {
       console.error('Submit exam error:', error);
@@ -333,7 +333,7 @@ export const adminAPI = {
   // Get student submissions summary
   getStudentSubmissions: async () => {
     try {
-      const response = await api.get('/student-submissions');
+      const response = await api.get('/api/student-submissions');
       return response.data;
     } catch (error) {
       console.error('Get student submissions error:', error);
