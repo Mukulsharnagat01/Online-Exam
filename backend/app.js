@@ -6,9 +6,7 @@ import DbCon from './db/db.js';
 import { s3Client } from './config/awsConfig.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-// import { Submission } from '../models/Submission.js';
-// import { ddb} from '../config/dynamo.js';
-// import { PutCommand, GetCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+
 import questionRoutes from "./routes/question.routes.js";
 import submissionRoutes from "./routes/submission.routes.js";
 import cookieParser from "cookie-parser";
@@ -18,7 +16,7 @@ import resultRoutes from './routes/result.routes.js';    // ✅ ADD THIS
 import studentRoutes from './routes/student.routes.js';  // ✅ ADD THIS
 
 
-// ,,,,,,
+
 dotenv.config();
 
 const app = express();
