@@ -39,7 +39,7 @@ DbCon();
 app.use('/auth', AuthRoutes); // /auth/register, /auth/login etc.
 app.use("/questions", questionRoutes);
 // app.use('/submissions', submissionRoutes);
-app.use('/api/exams', examRoutes);      // ✅ ADD THIS LINE
+app.use('/exams', examRoutes);      // ✅ ADD THIS LINE
 app.use('/results', resultRoutes);  // ✅ ADD THIS LINE
 app.use('/student', studentRoutes); // ✅ ADD THIS LINE
 app.use('/', submissionRoutes);
